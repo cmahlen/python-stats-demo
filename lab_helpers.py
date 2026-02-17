@@ -490,9 +490,9 @@ def describe_regions(network=None):
         net = _network_map[i]
 
         # Determine hemisphere
-        if "-rh" in name or "_RH_" in name:
+        if "-rh" in name or name.startswith("RH_"):
             hemi = "Right"
-        elif "-lh" in name or "_LH_" in name:
+        elif "-lh" in name or name.startswith("LH_"):
             hemi = "Left"
         else:
             hemi = "—"
@@ -502,13 +502,13 @@ def describe_regions(network=None):
         if prefix in SUBCORTICAL_PREFIXES:
             desc = _subregion_descriptions.get(prefix, prefix)
         else:
+            # Format: LH_SalVentAttnA_Ins_1 -> parts[2] = Ins, parts[3] = 1
             parts = name.split("_")
-            # Extract the subregion part (everything after network name)
-            if len(parts) >= 4:
-                subregion_key = parts[3]
+            if len(parts) >= 3:
+                subregion_key = parts[2]
                 desc = _subregion_descriptions.get(subregion_key, subregion_key)
-                if len(parts) >= 5:
-                    desc += f" (parcel {parts[4]})"
+                if len(parts) >= 4:
+                    desc += f" (parcel {parts[3]})"
             else:
                 desc = name
 
@@ -1041,12 +1041,13 @@ def plot_network_matrix(network):
     mat = _fc_tensor.mean(axis=2)
     sub_mat = mat[np.ix_(indices, indices)]
     labels = [_roi_names[i] for i in indices]
-    # Shorten labels for display
+    # Shorten labels: LH_SalVentAttnA_Ins_1 -> LH_Ins_1 (drop network name)
     short_labels = []
     for lab in labels:
         parts = lab.split("_")
-        if len(parts) >= 4:
-            short_labels.append("_".join(parts[3:]))
+        if len(parts) >= 3:
+            # Keep hemisphere + region + parcel: LH_Ins_1
+            short_labels.append(f"{parts[0]}_{'_'.join(parts[2:])}")
         else:
             short_labels.append(lab)
 
@@ -1068,7 +1069,7 @@ def plot_network_matrix(network):
 # Glass brain plot (uses nilearn)
 # ============================================================================
 
-def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05):
+def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05, corrected=False):
     """
     Plot significant edges on a glass brain using nilearn.
 
@@ -1081,6 +1082,8 @@ def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05):
         Number of top edges to display (default: 10).
     p_threshold : float
         Only show edges with p < this value (default: 0.05).
+    corrected : bool
+        If True, use 'p_corrected' column instead of 'p' (default: False).
     """
     if not _check_loaded():
         return
@@ -1104,9 +1107,11 @@ def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05):
         return
 
     # Filter significant and take top N
-    sig = results_df[results_df["p"] < p_threshold].head(n_top)
+    p_col = "p_corrected" if corrected and "p_corrected" in results_df.columns else "p"
+    sig = results_df[results_df[p_col] < p_threshold].head(n_top)
+    p_label = "corrected p" if p_col == "p_corrected" else "p"
     if len(sig) == 0:
-        print(f"No edges with p < {p_threshold} to display.")
+        print(f"No edges with {p_label} < {p_threshold} to display.")
         return
 
     # Build adjacency matrix with r-values for significant edges only
@@ -1147,7 +1152,7 @@ def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05):
         edge_kwargs={"linewidth": 4, "alpha": 0.7},
         display_mode="lzr",
         figure=fig,
-        title=f"Top {len(sig)} Edges (p < {p_threshold})",
+        title=f"Top {len(sig)} Edges ({p_label} < {p_threshold})",
         colorbar=True,
     )
 

@@ -101,9 +101,9 @@ TOPICS = {
         # Real effects: bilateral SalVentAttnA Insula <-> FrMed
         "real_effects": [
             {"roi_a": "17Networks_LH_SalVentAttnA_Ins_1", "roi_b": "17Networks_RH_SalVentAttnA_FrMed_1",
-             "r": 0.21, "seeds": {"discovery": 1018, "validation": 6}},
+             "r": -0.21, "seeds": {"discovery": 1018, "validation": 6}},
             {"roi_a": "17Networks_RH_SalVentAttnA_Ins_1", "roi_b": "17Networks_LH_SalVentAttnA_FrMed_1",
-             "r": 0.21, "seeds": {"discovery": 1019, "validation": 7}},
+             "r": -0.21, "seeds": {"discovery": 1019, "validation": 7}},
         ],
         "variables": [
             {"name": "Age", "mean": 38, "std": 14, "min": 18, "max": 70, "r": 0.20},

@@ -550,7 +550,7 @@ def get_edge(roi_a, roi_b):
 
 
 def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
-              exclude_outliers=None, subgroup=None):
+              exclude_outliers=None, subgroup=None, save_path=None):
     """
     Scatter plot of an edge's FC values vs. a behavioral variable.
 
@@ -571,6 +571,8 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
         Filter subjects. Keys are column names, values are either:
         - A specific value: {'Sex': 1} keeps only Sex==1
         - 'above_median' or 'below_median': {'Age': 'below_median'}
+    save_path : str, optional
+        File path to save the figure (e.g., 'my_edge.png'). If None, not saved.
     """
     if not _check_loaded():
         return
@@ -663,7 +665,7 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
     else:
         p_str = f"p = {p:.4f}"
 
-    plt.figure(figsize=(7, 5))
+    fig = plt.figure(figsize=(7, 5))
     plt.scatter(edge_vals, beh_vals, alpha=0.5, color="steelblue", edgecolors="white",
                 linewidth=0.5, s=40)
 
@@ -691,6 +693,9 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
         title += f"\n[{'; '.join(adjustments)}]"
     plt.title(title, fontsize=11)
     plt.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Figure saved to '{save_path}'")
     plt.show()
 
 
@@ -957,7 +962,7 @@ def test_network_edges(network, behavior_col=None, covariates=None,
 # Visualization: connectome heatmap
 # ============================================================================
 
-def plot_connectome(subject=None):
+def plot_connectome(subject=None, save_path=None):
     """
     Plot a heatmap of the FC matrix, organized by network.
 
@@ -965,6 +970,8 @@ def plot_connectome(subject=None):
     ----------
     subject : int, optional
         Subject index (0-based). If None, shows the group average.
+    save_path : str, optional
+        File path to save the figure (e.g., 'connectome.png'). If None, not saved.
     """
     if not _check_loaded():
         return
@@ -1013,10 +1020,13 @@ def plot_connectome(subject=None):
     ax.set_title(title, fontsize=13)
     plt.colorbar(im, ax=ax, label="Functional Connectivity", shrink=0.8)
     plt.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Figure saved to '{save_path}'")
     plt.show()
 
 
-def plot_network_matrix(network):
+def plot_network_matrix(network, save_path=None):
     """
     Zoomed heatmap for edges within/involving one network.
 
@@ -1024,6 +1034,8 @@ def plot_network_matrix(network):
     ----------
     network : str
         Network name (fuzzy matching supported).
+    save_path : str, optional
+        File path to save the figure (e.g., 'network.png'). If None, not saved.
     """
     if not _check_loaded():
         return
@@ -1062,6 +1074,9 @@ def plot_network_matrix(network):
     ax.set_title(f"{value} Network ({len(indices)} ROIs)", fontsize=13)
     plt.colorbar(im, ax=ax, label="Functional Connectivity", shrink=0.8)
     plt.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Figure saved to '{save_path}'")
     plt.show()
 
 
@@ -1267,7 +1282,7 @@ def describe_variables():
     print(f"\n{len(_behavior.columns)} variables total.")
 
 
-def plot_behavior(var_a, var_b, covariates=None, subgroup=None):
+def plot_behavior(var_a, var_b, covariates=None, subgroup=None, save_path=None):
     """
     Scatter plot of one behavioral variable vs another with regression line
     and Pearson r.
@@ -1281,6 +1296,8 @@ def plot_behavior(var_a, var_b, covariates=None, subgroup=None):
     subgroup : dict, optional
         Filter subjects before plotting. Keys are column names, values are
         specific values or 'above_median'/'below_median'.
+    save_path : str, optional
+        File path to save the figure (e.g., 'behavior.png'). If None, not saved.
     """
     if not _check_loaded():
         return
@@ -1344,7 +1361,7 @@ def plot_behavior(var_a, var_b, covariates=None, subgroup=None):
     else:
         p_str = f"p = {p:.4f}"
 
-    plt.figure(figsize=(7, 5))
+    fig = plt.figure(figsize=(7, 5))
     plt.scatter(x, y, alpha=0.5, color="steelblue", edgecolors="white",
                 linewidth=0.5, s=40)
 
@@ -1361,4 +1378,7 @@ def plot_behavior(var_a, var_b, covariates=None, subgroup=None):
         title += f"\n[{'; '.join(adjustments)}]"
     plt.title(title, fontsize=12)
     plt.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Figure saved to '{save_path}'")
     plt.show()

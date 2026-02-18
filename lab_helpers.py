@@ -666,11 +666,23 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
         p_str = f"p = {p:.4f}"
 
     fig, ax = plt.subplots(figsize=(7, 5))
-    sns.regplot(x=edge_vals, y=beh_vals, ax=ax,
-                scatter_kws={"alpha": 0.5, "color": "steelblue",
-                             "edgecolors": "white", "linewidth": 0.5, "s": 40},
-                line_kws={"color": "coral", "linewidth": 2},
-                ci=95)
+    ax.scatter(edge_vals, beh_vals, alpha=0.5, color="steelblue",
+               edgecolors="white", linewidths=0.5, s=40)
+
+    # Regression line + 95% CI band
+    n = len(edge_vals)
+    x_mean = edge_vals.mean()
+    coefs = np.polyfit(edge_vals, beh_vals, 1)
+    x_line = np.linspace(edge_vals.min(), edge_vals.max(), 100)
+    y_line = np.polyval(coefs, x_line)
+    residuals = beh_vals - np.polyval(coefs, edge_vals)
+    s_err = np.sqrt(np.sum(residuals ** 2) / (n - 2))
+    se = s_err * np.sqrt(1 / n + (x_line - x_mean) ** 2 /
+                         np.sum((edge_vals - x_mean) ** 2))
+    t_crit = t_dist.ppf(0.975, df=n - 2)
+    ax.plot(x_line, y_line, color="coral", linewidth=2)
+    ax.fill_between(x_line, y_line - t_crit * se, y_line + t_crit * se,
+                    color="coral", alpha=0.2)
 
     net_a = _network_map[idx_a]
     net_b = _network_map[idx_b]
@@ -1359,22 +1371,32 @@ def plot_behavior(var_a, var_b, covariates=None, subgroup=None, save_path=None):
     else:
         p_str = f"p = {p:.4f}"
 
-    fig = plt.figure(figsize=(7, 5))
-    plt.scatter(x, y, alpha=0.5, color="steelblue", edgecolors="white",
-                linewidth=0.5, s=40)
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.scatter(x, y, alpha=0.5, color="steelblue", edgecolors="white",
+               linewidths=0.5, s=40)
 
-    # Regression line
-    z = np.polyfit(x, y, 1)
+    # Regression line + 95% CI band
+    n = len(x)
+    x_mean = x.mean()
+    coefs = np.polyfit(x, y, 1)
     x_line = np.linspace(x.min(), x.max(), 100)
-    plt.plot(x_line, np.polyval(z, x_line), color="coral", linewidth=2)
+    y_line = np.polyval(coefs, x_line)
+    residuals = y - np.polyval(coefs, x)
+    s_err = np.sqrt(np.sum(residuals ** 2) / (n - 2))
+    se = s_err * np.sqrt(1 / n + (x_line - x_mean) ** 2 /
+                         np.sum((x - x_mean) ** 2))
+    t_crit = t_dist.ppf(0.975, df=n - 2)
+    ax.plot(x_line, y_line, color="coral", linewidth=2)
+    ax.fill_between(x_line, y_line - t_crit * se, y_line + t_crit * se,
+                    color="coral", alpha=0.2)
 
-    plt.xlabel(xlabel, fontsize=11)
-    plt.ylabel(ylabel, fontsize=11)
+    ax.set_xlabel(xlabel, fontsize=11)
+    ax.set_ylabel(ylabel, fontsize=11)
 
     title = f"r = {r:.3f}, {p_str}  (n = {len(x)})"
     if adjustments:
         title += f"\n[{'; '.join(adjustments)}]"
-    plt.title(title, fontsize=12)
+    ax.set_title(title, fontsize=12)
     plt.tight_layout()
     if save_path is not None:
         fig.savefig(save_path, dpi=150, bbox_inches="tight")

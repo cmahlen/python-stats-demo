@@ -79,7 +79,7 @@ TOPICS = {
             {"name": "Sex", "type": "binary", "p": 0.52},
             {"name": "BMI", "mean": 26, "std": 5, "min": 15, "max": 45, "r": 0.0},
             {"name": "HRV", "mean": 55, "std": 15, "min": 10, "max": 120, "r": 0.0},
-            {"name": "Sleep_Quality", "mean": 7, "std": 3, "min": 0, "max": 21, "r": 0.20},
+            {"name": "Sleep_Quality", "mean": 7, "std": 3, "min": 0, "max": 21, "r": -0.20},
             {"name": "Physical_Activity", "mean": 150, "std": 60, "min": 0, "max": 400, "r": 0.0},
             {"name": "Caffeine_mg", "mean": 200, "std": 100, "min": 0, "max": 600, "r": 0.0},
             {"name": "Stress_Level", "mean": 16, "std": 7, "min": 0, "max": 40, "r": 0.38},
@@ -110,7 +110,7 @@ TOPICS = {
             {"name": "Sex", "type": "binary", "p": 0.55},
             {"name": "BMI", "mean": 27, "std": 5, "min": 15, "max": 45, "r": 0.0},
             {"name": "HRV", "mean": 52, "std": 14, "min": 10, "max": 120, "r": 0.0},
-            {"name": "Sleep_Quality", "mean": 10, "std": 4, "min": 0, "max": 21, "r": 0.38},
+            {"name": "Sleep_Quality", "mean": 10, "std": 4, "min": 0, "max": 21, "r": -0.38},
             {"name": "Physical_Activity", "mean": 130, "std": 55, "min": 0, "max": 400, "r": -0.20},
             {"name": "Caffeine_mg", "mean": 220, "std": 110, "min": 0, "max": 600, "r": 0.0},
             {"name": "Stress_Level", "mean": 20, "std": 8, "min": 0, "max": 40, "r": 0.40},
@@ -139,7 +139,7 @@ TOPICS = {
             {"name": "Sex", "type": "binary", "p": 0.58},
             {"name": "BMI", "mean": 25, "std": 4.5, "min": 15, "max": 45, "r": 0.0},
             {"name": "HRV", "mean": 58, "std": 16, "min": 10, "max": 120, "r": 0.0},
-            {"name": "Sleep_Quality", "mean": 8, "std": 3, "min": 0, "max": 21, "r": 0.22},
+            {"name": "Sleep_Quality", "mean": 8, "std": 3, "min": 0, "max": 21, "r": -0.22},
             {"name": "Physical_Activity", "mean": 160, "std": 65, "min": 0, "max": 400, "r": 0.0},
             {"name": "Caffeine_mg", "mean": 190, "std": 90, "min": 0, "max": 600, "r": 0.18},
             {"name": "Stress_Level", "mean": 22, "std": 8, "min": 0, "max": 40, "r": 0.40},
@@ -337,9 +337,10 @@ def generate_dataset(topic_name, split, rng):
                     - behavior_data[:, col_idx["Screen_Time"]].mean())
         z_screen = z_screen / (z_screen.std() + 1e-12)
 
-        # Sleep_Quality: driven by Screen_Time (r~0.40) + outcome (keep existing r) + noise
+        # Sleep_Quality: driven by Screen_Time (r~-0.40) + outcome (keep existing r) + noise
+        # More screen time = worse sleep = lower Sleep_Quality score
         sq_cfg = next(v for v in config["variables"] if v["name"] == "Sleep_Quality")
-        w_screen_sq = 0.40
+        w_screen_sq = -0.40
         w_outcome_sq = sq_cfg.get("r", 0.0) * 0.7
         w_noise_sq = np.sqrt(max(1 - w_screen_sq**2 - w_outcome_sq**2, 0.01))
         z_sq = (w_screen_sq * z_screen + w_outcome_sq * z_outcome
@@ -543,8 +544,8 @@ def main():
             r_sm_sq, _ = pearsonr(beh_data[:, col_idx["Social_Media"]],
                                    beh_data[:, col_idx["Sleep_Quality"]])
             print(f"    Screen_Time <-> Social_Media: r={r_st_sm:.3f} (target ~0.50)")
-            print(f"    Screen_Time <-> Sleep_Quality: r={r_st_sq:.3f} (target ~0.40)")
-            print(f"    Social_Media <-> Sleep_Quality: r={r_sm_sq:.3f} (target ~0.25)")
+            print(f"    Screen_Time <-> Sleep_Quality: r={r_st_sq:.3f} (target ~-0.40)")
+            print(f"    Social_Media <-> Sleep_Quality: r={r_sm_sq:.3f} (target ~-0.25)")
 
         if all(k in col_idx for k in ["Social_Media", "Stress_Level", "Sex"]):
             print(f"  Moderation check (Social_Media <-> Stress_Level by Sex):")

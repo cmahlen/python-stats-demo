@@ -1069,7 +1069,8 @@ def plot_network_matrix(network):
 # Glass brain plot (uses nilearn)
 # ============================================================================
 
-def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05, corrected=False):
+def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05, corrected=False,
+                     save_path=None, show=True):
     """
     Plot significant edges on a glass brain using nilearn.
 
@@ -1084,6 +1085,12 @@ def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05, corrected=Fals
         Only show edges with p < this value (default: 0.05).
     corrected : bool
         If True, use 'p_corrected' column instead of 'p' (default: False).
+    save_path : str, optional
+        File path to save the figure (e.g., 'my_brain.png'). If None, figure
+        is not saved.
+    show : bool
+        Whether to call plt.show() (default: True). Set to False if you want
+        to further modify the figure before displaying or saving.
     """
     if not _check_loaded():
         return
@@ -1172,7 +1179,12 @@ def plot_glass_brain(results_df=None, n_top=10, p_threshold=0.05, corrected=Fals
     fig.legend(handles=legend_patches, loc="lower center", ncol=len(involved_nets),
                fontsize=8, framealpha=0.9, bbox_to_anchor=(0.5, -0.02))
 
-    plt.show()
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Figure saved to '{save_path}'")
+
+    if show:
+        plt.show()
 
 
 # ============================================================================

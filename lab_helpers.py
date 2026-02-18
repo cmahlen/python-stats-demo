@@ -665,14 +665,12 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
     else:
         p_str = f"p = {p:.4f}"
 
-    fig = plt.figure(figsize=(7, 5))
-    plt.scatter(edge_vals, beh_vals, alpha=0.5, color="steelblue", edgecolors="white",
-                linewidth=0.5, s=40)
-
-    # Regression line
-    z = np.polyfit(edge_vals, beh_vals, 1)
-    x_line = np.linspace(edge_vals.min(), edge_vals.max(), 100)
-    plt.plot(x_line, np.polyval(z, x_line), color="coral", linewidth=2)
+    fig, ax = plt.subplots(figsize=(7, 5))
+    sns.regplot(x=edge_vals, y=beh_vals, ax=ax,
+                scatter_kws={"alpha": 0.5, "color": "steelblue",
+                             "edgecolors": "white", "linewidth": 0.5, "s": 40},
+                line_kws={"color": "coral", "linewidth": 2},
+                ci=95)
 
     net_a = _network_map[idx_a]
     net_b = _network_map[idx_b]

@@ -3,13 +3,15 @@ The point of this lab is to introduce students to programming-based statistics (
 This lab will be 45-60 mins (potentially more). These students are assumed to have little to no programming knowledge. 
 
 The learning objectives:
-1. Gain basic familiarity with Python programming and some of its libraries. Be able to do the following
-- Upload your own csv or xlsx files as a dataframe
-- Inspect the dataframe
-- Perform basic sanity checks
-- Be able to make your own simple graphs (histograms, swarm/strip plots)
-- Run some statistical tests (t-test, anova)
-2. Understand the tradeoffs between GUI- and code-based statistics 
+1. Gain basic familiarity with Python programming and some of its libraries. Be able to:
+   - Load Excel (.xlsx) and CSV files using pandas
+   - Inspect dataframes with .head(), .tail(), and quality checks
+   - Make simple graphs (histograms, swarm plots, bar plots)
+   - Run statistical tests (t-test, ANOVA, Tukey HSD, mixed ANOVA)
+   - Apply the "peek-then-analyze" workflow
+2. Understand the tradeoffs between GUI- and code-based statistics
+3. Build confidence experimenting with code (changing colors, parameters, etc.)
+4. Recognize and interpret basic Python errors 
 
 
 The source data is found at: 

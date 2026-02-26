@@ -25,14 +25,13 @@ Hands-on lab using simulated neuroimaging data. Students test brain-behavior rel
 | Day 1 -- Exploratory Analysis | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cmahlen/python-stats-demo/blob/main/fMRI_Lab_Exploratory.ipynb) |
 | Day 2 -- Validation | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cmahlen/python-stats-demo/blob/main/fMRI_Lab_Exploratory_Day2.ipynb) |
 
-**Hypothesis-driven group:**
+**Hypothesis-driven group** (pain or depression topic assigned by instructor):
 
 | Notebook | Open |
 |----------|------|
 | Day 1 -- Pain (NAc-vmPFC) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cmahlen/python-stats-demo/blob/main/fMRI_Lab_Hypothesis_Pain.ipynb) |
-| Day 2 -- Pain Validation | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cmahlen/python-stats-demo/blob/main/fMRI_Lab_Hypothesis_Pain_Day2.ipynb) |
 | Day 1 -- Depression (Salience Network) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cmahlen/python-stats-demo/blob/main/fMRI_Lab_Hypothesis_Depression.ipynb) |
-| Day 2 -- Depression Validation | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cmahlen/python-stats-demo/blob/main/fMRI_Lab_Hypothesis_Depression_Day2.ipynb) |
+| Day 2 -- Validation | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cmahlen/python-stats-demo/blob/main/fMRI_Lab_Hypothesis_Day2.ipynb) |
 
 ---
 

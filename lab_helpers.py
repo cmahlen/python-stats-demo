@@ -549,6 +549,100 @@ def get_edge(roi_a, roi_b):
     return _fc_tensor[idx_a, idx_b, :]
 
 
+def test_edge(roi_a, roi_b, behavior_col=None, covariates=None,
+              exclude_outliers=None, subgroup=None):
+    """
+    Compute the correlation between one edge and a behavioral variable,
+    with optional covariate control, outlier removal, and subgroup filtering.
+    Mirrors the exact pipeline used by plot_edge.
+
+    Parameters
+    ----------
+    roi_a, roi_b : str
+        ROI names (fuzzy matching supported).
+    behavior_col : str, optional
+        Column name from behavioral data. If None, uses the first column.
+    covariates : list of str or 'all', optional
+        Variables to partial out (residualization).
+    exclude_outliers : float, optional
+        Z-score threshold for outlier removal on edge values.
+    subgroup : dict, optional
+        Filter subjects, e.g. {'Sex': 0} or {'Age': 'below_median'}.
+
+    Returns
+    -------
+    r : float
+    p : float
+    n : int  (number of subjects after all filtering)
+    """
+    if not _check_loaded():
+        return None, None, None
+
+    idx_a, name_a = _resolve_roi(roi_a)
+    if idx_a is None:
+        return None, None, None
+    idx_b, name_b = _resolve_roi(roi_b)
+    if idx_b is None:
+        return None, None, None
+    if idx_a == idx_b:
+        print(f"Error: both ROIs resolve to the same region ({name_a}).")
+        return None, None, None
+
+    if behavior_col is None:
+        behavior_col = _behavior.columns[0]
+    elif behavior_col not in _behavior.columns:
+        print(f"Error: '{behavior_col}' not found. Available: {list(_behavior.columns)}")
+        return None, None, None
+
+    n_original = _fc_tensor.shape[2]
+    edge_vals = _fc_tensor[idx_a, idx_b, :].astype(np.float64)
+    beh_vals = _behavior[behavior_col].values.astype(np.float64)
+
+    # 1. Subgroup filter
+    keep = np.ones(n_original, dtype=bool)
+    if subgroup is not None:
+        for col, val in subgroup.items():
+            if col not in _behavior.columns:
+                print(f"Error: '{col}' not found in behavioral data.")
+                return None, None, None
+            col_vals = _behavior[col].values
+            if val == 'above_median':
+                keep &= col_vals >= np.median(col_vals)
+            elif val == 'below_median':
+                keep &= col_vals < np.median(col_vals)
+            else:
+                keep &= col_vals == val
+    edge_vals = edge_vals[keep]
+    beh_vals = beh_vals[keep]
+
+    # 2. Outlier exclusion (on edge values)
+    if exclude_outliers is not None:
+        z = np.abs((edge_vals - edge_vals.mean()) / (edge_vals.std() + 1e-12))
+        ok = z < exclude_outliers
+        keep_indices = np.where(keep)[0]
+        keep = np.zeros(n_original, dtype=bool)
+        keep[keep_indices[ok]] = True
+        edge_vals = edge_vals[ok]
+        beh_vals = beh_vals[ok]
+
+    # 3. Covariate residualization
+    if covariates is not None:
+        if covariates == 'all':
+            cov_cols = [c for c in _behavior.columns if c != behavior_col]
+        else:
+            cov_cols = list(covariates)
+            for c in cov_cols:
+                if c not in _behavior.columns:
+                    print(f"Error: covariate '{c}' not found.")
+                    return None, None, None
+        cov_data = _behavior[cov_cols].values[keep].astype(np.float64)
+        edge_vals = _residualize(cov_data, edge_vals)
+        beh_vals = _residualize(cov_data, beh_vals)
+
+    r, p = pearsonr(edge_vals, beh_vals)
+    return float(r), float(p), int(len(edge_vals))
+
+
 def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
               exclude_outliers=None, subgroup=None, save_path=None):
     """

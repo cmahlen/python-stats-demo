@@ -644,7 +644,8 @@ def test_edge(roi_a, roi_b, behavior_col=None, covariates=None,
 
 
 def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
-              exclude_outliers=None, subgroup=None, save_path=None):
+              exclude_outliers=None, subgroup=None, save_path=None,
+              glass_brain=False):
     """
     Scatter plot of an edge's FC values vs. a behavioral variable.
 
@@ -667,6 +668,10 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
         - 'above_median' or 'below_median': {'Age': 'below_median'}
     save_path : str, optional
         File path to save the figure (e.g., 'my_edge.png'). If None, not saved.
+    glass_brain : bool, optional
+        If True, also draw a glass brain below the scatter plot showing the
+        two regions and the connection ("link") between them, colored by the
+        sign of the correlation (red = positive, blue = negative). Default False.
     """
     if not _check_loaded():
         return
@@ -815,6 +820,86 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
     if save_path is not None:
         fig.savefig(save_path, dpi=150, bbox_inches="tight")
         print(f"Figure saved to '{save_path}'")
+    plt.show()
+
+    if glass_brain:
+        _plot_edge_glass_brain(idx_a, idx_b, r)
+
+
+# r value that maps to full color saturation on the glass-brain edge colormap.
+# Fixed (not per-edge) so color is comparable across plots: |r| = 0.3 is a large
+# brain-behavior effect, so weak correlations render faint / near the white center.
+_EDGE_R_SCALE = 0.3
+
+
+def _plot_edge_glass_brain(idx_a, idx_b, r, save_path=None):
+    """Draw a single edge (idx_a <-> idx_b) on a glass brain.
+
+    The two regions are shown as nodes colored by their network, and the
+    connection between them is colored by r on a fixed scale (red = positive,
+    blue = negative; +/- _EDGE_R_SCALE maps to full color). A colorbar shows
+    the scale. Used by plot_edge(..., glass_brain=True).
+    """
+    if _roi_coords is None:
+        print("(glass_brain skipped: ROI coordinates not found -- re-run load_dataset().)")
+        return
+    try:
+        from nilearn import plotting
+    except ImportError:
+        print("(glass_brain skipped: nilearn not installed -- run: !pip install nilearn)")
+        return
+
+    n = _n_rois
+    adj = np.zeros((n, n), dtype=np.float32)
+    adj[idx_a, idx_b] = r
+    adj[idx_b, idx_a] = r
+
+    involved = (idx_a, idx_b)
+    node_size = np.array([60 if i in involved else 0 for i in range(n)])
+    node_color = [NETWORK_COLORS.get(_network_map[i], "gray") if i in involved
+                  else "lightgray" for i in range(n)]
+
+    def _short(name):
+        return "_".join(name.split("_")[-2:]) if "_" in name else name
+    short_a, short_b = _short(_roi_names[idx_a]), _short(_roi_names[idx_b])
+    direction = "red = positive" if r > 0 else "blue = negative"
+
+    fig = plt.figure(figsize=(12, 4))
+    plotting.plot_connectome(
+        adj,
+        _roi_coords,
+        node_size=node_size,
+        node_color=node_color,
+        edge_cmap="RdBu_r",
+        edge_vmin=-_EDGE_R_SCALE,
+        edge_vmax=_EDGE_R_SCALE,
+        edge_kwargs={"linewidth": 4, "alpha": 0.8},
+        display_mode="ortho",
+        figure=fig,
+        title=f"{short_a} <-> {short_b}   |   r = {r:.3f}   ({direction})",
+        colorbar=True,
+    )
+
+    # Label the colorbar (the narrow axis nilearn adds) with "r"
+    for cax in fig.get_axes():
+        bbox = cax.get_position()
+        if bbox.width < 0.05 and cax.get_ylabel() == "":
+            cax.set_ylabel("r", fontsize=11, rotation=0, labelpad=10)
+
+    # Network legend for the involved regions
+    nets = []
+    for i in involved:
+        net = _network_map[i]
+        if net not in nets:
+            nets.append(net)
+    legend_patches = [mpatches.Patch(color=NETWORK_COLORS.get(net, "gray"), label=net)
+                      for net in nets]
+    fig.legend(handles=legend_patches, loc="lower center", ncol=len(nets),
+               fontsize=8, framealpha=0.9, bbox_to_anchor=(0.5, -0.02))
+
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Glass brain saved to '{save_path}'")
     plt.show()
 
 

@@ -720,10 +720,15 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
     beh_vals = beh_vals[keep]
 
     # 2. Outlier exclusion (on edge values)
+    excluded_edge_vals = None   # points removed as outliers (for highlighting on the plot)
+    excluded_beh_vals = None
     if exclude_outliers is not None:
         z = np.abs((edge_vals - edge_vals.mean()) / (edge_vals.std() + 1e-12))
         ok = z < exclude_outliers
         n_excl = (~ok).sum()
+        if n_excl > 0:
+            excluded_edge_vals = edge_vals[~ok]
+            excluded_beh_vals = beh_vals[~ok]
         edge_vals = edge_vals[ok]
         beh_vals = beh_vals[ok]
         # Also filter the behavioral DataFrame for covariates below
@@ -762,6 +767,16 @@ def plot_edge(roi_a, roi_b, behavior_col=None, covariates=None,
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.scatter(edge_vals, beh_vals, alpha=0.5, color="steelblue",
                edgecolors="white", linewidths=0.5, s=40)
+
+    # Highlight the points removed as outliers so students can see which ones were dropped.
+    # Only shown when there are no covariates: with covariates the retained points are
+    # residualized, so the excluded raw points would not be on the same axes.
+    if excluded_edge_vals is not None and covariates is None:
+        ax.scatter(excluded_edge_vals, excluded_beh_vals,
+                   color="crimson", marker="x", s=90, linewidths=2,
+                   label=f"excluded outlier (n = {len(excluded_edge_vals)})",
+                   zorder=5)
+        ax.legend(loc="best", fontsize=9)
 
     # Regression line + 95% CI band
     n = len(edge_vals)
